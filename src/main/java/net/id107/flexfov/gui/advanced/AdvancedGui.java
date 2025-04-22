@@ -5,8 +5,8 @@ import net.id107.flexfov.gui.SettingsGui;
 import net.id107.flexfov.projection.Projection;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.DoubleOption;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.option.SimpleOption;
+import net.minecraft.text.Text;
 
 public class AdvancedGui extends SettingsGui {
 
@@ -39,77 +39,77 @@ public class AdvancedGui extends SettingsGui {
 		super.init();
 		
 		ButtonWidget button = new ButtonWidget(width / 2 - 180, height / 6 + 12, 100, 20,
-				new LiteralText("Cubic"), (buttonWidget) -> {
+				Text.literal("Cubic"), (buttonWidget) -> {
 					currentGui = 0;
 					client.setScreen(new CubicGui(parentScreen));
 		});
 		if (this instanceof CubicGui) {
 			button.active = false;
 		}
-		addButton(button);
+		addDrawableChild(button);
 		
 		button = new ButtonWidget(width / 2 - 50, height / 6 + 12, 100, 20,
-				new LiteralText("Hammer"), (buttonWidget) -> {
+				Text.literal("Hammer"), (buttonWidget) -> {
 					currentGui = 1;
 					client.setScreen(new HammerGui(parentScreen));
 				});
 		if (this instanceof HammerGui) {
 			button.active = false;
 		}
-		addButton(button);
+		addDrawableChild(button);
 		
 		button = new ButtonWidget(width / 2 + 80, height / 6 + 12, 100, 20,
-				new LiteralText("Panini"), (buttonWidget) -> {
+				Text.literal("Panini"), (buttonWidget) -> {
 					currentGui = 2;
 					client.setScreen(new PaniniGui(parentScreen));
 				});
 		if (this instanceof PaniniGui) {
 			button.active = false;
 		}
-		addButton(button);
+		addDrawableChild(button);
 		
 		button = new ButtonWidget(width / 2 - 180, height / 6 + 36, 100, 20,
-				new LiteralText("Cylinder"), (buttonWidget) -> {
+				Text.literal("Cylinder"), (buttonWidget) -> {
 					currentGui = 3;
 					client.setScreen(new CylinderGui(parentScreen));
 				});
 		if (this instanceof CylinderGui) {
 			button.active = false;
 		}
-		addButton(button);
+		addDrawableChild(button);
 		
 		button = new ButtonWidget(width / 2 - 50, height / 6 + 36, 100, 20,
-				new LiteralText("Fisheye"), (buttonWidget) -> {
+				Text.literal("Fisheye"), (buttonWidget) -> {
 					currentGui = 4;
 					client.setScreen(new FisheyeGui(parentScreen));
 				});
 		if (this instanceof FisheyeGui) {
 			button.active = false;
 		}
-		addButton(button);
+		addDrawableChild(button);
 		
 		button = new ButtonWidget(width / 2 + 80, height / 6 + 36, 100, 20,
-				new LiteralText("Equirectangular"), (buttonWidget) -> {
+				Text.literal("Equirectangular"), (buttonWidget) -> {
 					currentGui = 5;
 					client.setScreen(new EquirectangularGui(parentScreen));
 				});
 		if (this instanceof EquirectangularGui) {
 			button.active = false;
 		}
-		addButton(button);
+		addDrawableChild(button);
 		
 		if (!(this instanceof CubicGui)) {
-			DoubleOption zoom = new DoubleOption("zoom", -2, 2, 0.05f,
+			SimpleOption<double> zoom = new SimpleOption<double>("zoom", -2, 2, 0.05f,
 					(gameOptions) -> {return (double) Projection.zoom;},
 					(gameOptions, number) -> {Projection.zoom = (float)(double)number; ConfigManager.saveConfig();},
-					(gameOptions, doubleOption) -> {return new LiteralText(String.format("Zoom: %.2f", Projection.zoom));});
-			addButton(zoom.createButton(client.options, width / 2 + 5, height / 6 + 84, 150));
+					(gameOptions, SimpleOption<double>) -> {return Text.literal(String.format("Zoom: %.2f", Projection.zoom));});
+			addDrawableChild(zoom.createWidget(client.options, width / 2 + 5, height / 6 + 84, 150));
 		}
 		
-		addButton(new ButtonWidget(width / 2 + 5, height / 6 + 108, 150, 20,
-				new LiteralText("Resize Gui: " + (Projection.resizeGui ? "ON" : "OFF")), (buttonWidget) -> {
+		addDrawableChild(new ButtonWidget(width / 2 + 5, height / 6 + 108, 150, 20,
+				Text.literal("Resize Gui: " + (Projection.resizeGui ? "ON" : "OFF")), (buttonWidget) -> {
 					Projection.resizeGui = !Projection.resizeGui;
-					buttonWidget.setMessage(new LiteralText("Resize Gui: " + (Projection.resizeGui ? "ON" : "OFF")));
+					buttonWidget.setMessage(Text.literal("Resize Gui: " + (Projection.resizeGui ? "ON" : "OFF")));
 				}));
 	}
 }

@@ -1,5 +1,6 @@
 package net.id107.flexfov.mixin;
 
+import net.minecraft.client.gui.DrawContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,8 +37,8 @@ public abstract class GameRendererMixin {
 	private void renderPre(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) {
 		renderingPanoramaTemp = renderingPanorama;
 		renderingPanorama = Projection.getProjection().shouldOverrideFOV();
-		fovTemp = client.options.fov;
-		client.options.fov = Projection.getProjection().getPassFOV(fovTemp);
+		fovTemp = client.options.getFov().getValue();
+		client.options.getFov().setValue((int)Projection.getProjection().getPassFOV(fovTemp));
 		Projection.getProjection().renderWorld(tickDelta, startTime, tick);
 	}
 	
@@ -59,16 +60,16 @@ public abstract class GameRendererMixin {
 	}
 	
 	@Redirect(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/util/math/MatrixStack;F)V"))
-	private void renderHud(InGameHud inGameHud, MatrixStack matrixStack, float tickDelta) {
+	private void renderHud(InGameHud inGameHud, DrawContext drawContext, float tickDelta) {
 		if (!Projection.getProjection().getResizeGui()) {
-			inGameHud.render(matrixStack, tickDelta);
+			inGameHud.render(drawContext, tickDelta);
 		}
 	}
 	
 	@Redirect(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
-	private void renderCurrentScreen(Screen currentScreen, MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
+	private void renderCurrentScreen(Screen currentScreen, DrawContext drawContext, int mouseX, int mouseY, float delta) {
 		if (!Projection.getProjection().getResizeGui()) {
-			currentScreen.render(matrixStack, mouseX, mouseY, delta);
+			currentScreen.render(drawContext, mouseX, mouseY, delta);
 		}
 	}
 }

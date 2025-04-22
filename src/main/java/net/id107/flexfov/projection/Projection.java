@@ -1,11 +1,17 @@
 package net.id107.flexfov.projection;
 
+import net.fabricmc.fabric.mixin.client.gametest.screenshot.RenderTickCounterConstantAccessor;
+import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.render.RenderTickCounter.*;
+import org.joml.Matrix3fc;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
-import com.mojang.blaze3d.platform.FramebufferInfo;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.id107.flexfov.BufferManager;
@@ -16,8 +22,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Quaternion;
 
 public abstract class Projection {
 	
@@ -90,14 +94,24 @@ public abstract class Projection {
 			for (renderPass = 1; renderPass < 5; renderPass++) {
 				GL11.glViewport(0, 0, displayWidth, displayHeight);
 				mc.worldRenderer.scheduleTerrainUpdate();
-				mc.gameRenderer.renderWorld(tickDelta, startTime, new MatrixStack());
+				RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
+						20.0F,                           // Example TPS (ticks per second)
+						startTime + (long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
+						value -> 1000.0F / value         // Example FloatUnaryOperator
+				);
+                mc.gameRenderer.renderWorld(dynamicTickCounter);
 				saveRenderPass();
 			}
 			if (Math.max(getFovX(), getFovY()) > 250 || zoom < 0) {
 				renderPass = 5;
 				GL11.glViewport(0, 0, displayWidth, displayHeight);
 				mc.worldRenderer.scheduleTerrainUpdate();
-				mc.gameRenderer.renderWorld(tickDelta, startTime, new MatrixStack());
+				RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
+						20.0F,                           // Example TPS (ticks per second)
+						startTime + (long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
+						value -> 1000.0F / value         // Example FloatUnaryOperator
+				);
+				mc.gameRenderer.renderWorld(dynamicTickCounter);
 				saveRenderPass();
 			}
 		}
@@ -114,24 +128,24 @@ public abstract class Projection {
 		case 0:
 			break;
 		case 1:
-			matrix = new Matrix4f(new Quaternion(0, 0.707106781f, 0, 0.707106781f)); //look right
-			matrixStack.peek().getModel().multiply(matrix);
+			matrix = new Matrix4f((Matrix3fc) new Quaternionf(0, 0.707106781f, 0, 0.707106781f)); //look right
+			matrixStack.peek().getPositionMatrix().mul(matrix);
 			break;
 		case 2:
-			matrix = new Matrix4f(new Quaternion(0, -0.707106781f, 0, 0.707106781f)); //look left
-			matrixStack.peek().getModel().multiply(matrix);
+			matrix = new Matrix4f((Matrix3fc) new Quaternionf(0, -0.707106781f, 0, 0.707106781f)); //look left
+			matrixStack.peek().getPositionMatrix().mul(matrix);
 			break;
 		case 3:
-			matrix = new Matrix4f(new Quaternion(0.707106781f, 0, 0, 0.707106781f)); //look down
-			matrixStack.peek().getModel().multiply(matrix);
+			matrix = new Matrix4f((Matrix3fc) new Quaternionf(0.707106781f, 0, 0, 0.707106781f)); //look down
+			matrixStack.peek().getPositionMatrix().mul(matrix);
 			break;
 		case 4:
-			matrix = new Matrix4f(new Quaternion(-0.707106781f, 0, 0, 0.707106781f)); //look up
-			matrixStack.peek().getModel().multiply(matrix);
+			matrix = new Matrix4f((Matrix3fc) new Quaternionf(-0.707106781f, 0, 0, 0.707106781f)); //look up
+			matrixStack.peek().getPositionMatrix().mul(matrix);
 			break;
 		case 5:
-			matrix = new Matrix4f(new Quaternion(0, -1, 0, 0)); //look back
-			matrixStack.peek().getModel().multiply(matrix);
+			matrix = new Matrix4f((Matrix3fc) new Quaternionf(0, -1, 0, 0)); //look back
+			matrixStack.peek().getPositionMatrix().mul(matrix);
 			break;
 		}
 	}
@@ -140,30 +154,30 @@ public abstract class Projection {
 		if (getResizeGui() && renderPass == 0) {
 			MinecraftClient mc = MinecraftClient.getInstance();
 			Window window = mc.getWindow();
-			RenderSystem.matrixMode(5889);
-			RenderSystem.loadIdentity();
-			RenderSystem.ortho(0.0D, (double)window.getFramebufferWidth() / window.getScaleFactor(), (double)window.getFramebufferHeight() / window.getScaleFactor(), 0.0D, 1000.0D, 3000.0D);
-			RenderSystem.matrixMode(5888);
-			RenderSystem.loadIdentity();
-			RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
-			RenderSystem.defaultAlphaFunc();
-			RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+			GL11.glMatrixMode(GL11.GL_PROJECTION);
+			GL11.glLoadIdentity();
+			GL11.glOrtho(0.0D, (double)window.getFramebufferWidth() / window.getScaleFactor(), (double)window.getFramebufferHeight() / window.getScaleFactor(), 0.0D, 1000.0D, 3000.0D);
+			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+			GL11.glLoadIdentity();
+			GL11.glTranslatef(0.0F, 0.0F, -2000.0F);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+			GL11.glClear(256);
 			MatrixStack matrixStack = new MatrixStack();
 			mc.inGameHud.render(matrixStack, tickDelta);
-			RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+			GL11.glClear(256);
 			if (mc.currentScreen != null) {
 				int i = (int)(mc.mouse.getX() * (double)mc.getWindow().getScaledWidth() / (double)mc.getWindow().getWidth());
 				int j = (int)(mc.mouse.getY() * (double)mc.getWindow().getScaledHeight() / (double)mc.getWindow().getHeight());
-				mc.currentScreen.render(matrixStack, i, j, mc.getLastFrameDuration());
+				mc.currentScreen.render(matrixStack, i, j, (mc.getRenderTickCounter()).getDynamicDeltaTicks());
 			}
 		}
 		
 		Framebuffer defaultFramebuffer = MinecraftClient.getInstance().getFramebuffer();
 		Framebuffer targetFramebuffer = BufferManager.getFramebuffer();
 		
-		GlStateManager.bindFramebuffer(FramebufferInfo.FRAME_BUFFER, targetFramebuffer.fbo);
+		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, targetFramebuffer.fbo);
 		GL11.glViewport(0, 0, targetFramebuffer.textureWidth, targetFramebuffer.textureHeight);
-		GlStateManager.framebufferTexture2D(FramebufferInfo.FRAME_BUFFER, FramebufferInfo.COLOR_ATTACHMENT,
+		GlStateManager._glFramebufferTexture2D(GlConst.GL_FRAMEBUFFER, GlConst.GL_COLOR_ATTACHMENT0,
 				GL11.GL_TEXTURE_2D, BufferManager.framebufferTextures[renderPass], 0);
 		
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
@@ -175,7 +189,7 @@ public abstract class Projection {
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
 		
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, defaultFramebuffer.getColorAttachment());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, defaultFramebuffer.getColorAttachment().getMipLevels());
 		GL11.glBegin(GL11.GL_QUADS);
 		{
 			GL11.glTexCoord2f(BufferManager.getMinX(), BufferManager.getMinY());
@@ -195,7 +209,7 @@ public abstract class Projection {
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPopMatrix();
 		
-		GlStateManager.bindFramebuffer(FramebufferInfo.FRAME_BUFFER, defaultFramebuffer.fbo);
+		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, defaultFramebuffer.fbo);
 	}
 	
 	public void loadUniforms(float tickDelta) {

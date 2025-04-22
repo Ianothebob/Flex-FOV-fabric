@@ -4,8 +4,8 @@ import net.id107.flexfov.ConfigManager;
 import net.id107.flexfov.projection.Flex;
 import net.id107.flexfov.projection.Projection;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.DoubleOption;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.option.SimpleOption;
+import net.minecraft.text.Text;
 
 public class FlexGui extends SettingsGui {
 	
@@ -18,10 +18,10 @@ public class FlexGui extends SettingsGui {
 	protected void init() {
 		super.init();
 		
-		DoubleOption FOV = new DoubleOption("flexFov", 0, 360, 1,
+		SimpleOption<Double> FOV = new SimpleOption<Double>("flexFov", 0, 360, 1,
 				(gameOptions) -> {return Projection.getProjection().getFovX();},
 				(gameOptions, number) -> {Projection.fov = number; ConfigManager.saveConfig();},
-				(gameOptions, doubleOption) -> {return new LiteralText("FOV: " + (int)Projection.getProjection().getFovX());});
-		addButton(FOV.createButton(client.options, width / 2 - 180, height / 6 + 36, 360));
+				(gameOptions, SimpleOption<Double>) -> {return Text.literal("FOV: " + (int)Projection.getProjection().getFovX());});
+		addDrawableChild(FOV.createWidget(client.options, width / 2 - 180, height / 6 + 36, 360));
 	}
 }

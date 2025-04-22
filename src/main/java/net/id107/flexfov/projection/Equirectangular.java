@@ -32,10 +32,10 @@ public class Equirectangular extends Projection {
 		float pitch = 0;
 		float yaw = 0;
 		if (stabilizePitch) {
-			pitch = entity.prevPitch + (entity.pitch - entity.prevPitch) * tickDelta;
+			pitch = entity.prevPitch + (entity.getPitch() - entity.prevPitch) * tickDelta;
 		}
 		if (stabilizeYaw) {
-			yaw = entity.prevYaw + (entity.yaw - entity.prevYaw) * tickDelta;
+			yaw = entity.prevYaw + (entity.getYaw() - entity.prevYaw) * tickDelta;
 		}
 		if (mc.options.getPerspective() == Perspective.THIRD_PERSON_FRONT) {
 			pitch = -pitch;
