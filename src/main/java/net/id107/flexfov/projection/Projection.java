@@ -8,6 +8,8 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.RenderTickCounter.*;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.texture.AbstractTexture;
+import net.minecraft.client.texture.GlTexture;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
@@ -31,6 +33,7 @@ import net.minecraft.client.util.math.MatrixStack;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 public abstract class Projection {
 	
@@ -207,8 +210,7 @@ public abstract class Projection {
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
 
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, GlResourceManager.clearColorTexture(defaultFramebuffer.getColorAttachment()));
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, ((GlTexture) Objects.requireNonNull(defaultFramebuffer.getColorAttachment())).getGlId());
 		GL11.glBegin(GL11.GL_QUADS);
 		{
 			GL11.glTexCoord2f(BufferManager.getMinX(), BufferManager.getMinY());
