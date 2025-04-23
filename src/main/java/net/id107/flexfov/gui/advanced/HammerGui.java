@@ -17,12 +17,17 @@ public class HammerGui extends AdvancedGui {
 	@Override
 	protected void init() {
 		super.init();
-		
-		addDrawableChild(new ButtonWidget(width / 2 - 155, height / 6 + 84, 150, 20,
-				Text.literal("Background Color: " + (Projection.skyBackground ? "Sky" : "Black")), (buttonWidget) -> {
-					Projection.skyBackground = !Projection.skyBackground;
-					buttonWidget.setMessage(Text.literal("Background Color: " + (Projection.skyBackground ? "Sky" : "Black")));
-					ConfigManager.saveConfig();
-				}));
+
+		addDrawableChild(ButtonWidget.builder(
+						Text.of("Background Color: " + (Projection.skyBackground ? "Sky" : "Black")),
+						(buttonWidget) -> {
+							Projection.skyBackground = !Projection.skyBackground;
+							buttonWidget.setMessage(Text.literal("Background Color: " + (Projection.skyBackground ? "Sky" : "Black")));
+							ConfigManager.saveConfig();
+						})
+				.position(width / 2 - 155, height / 6 + 84)
+				.size(150, 20)
+				.narrationSupplier((buttonWidget) -> Text.literal("Background Color button. Can be Sky or Black"))
+				.build());
 	}
 }

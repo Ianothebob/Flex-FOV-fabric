@@ -18,23 +18,38 @@ public class EquirectangularGui extends AdvancedGui {
 	protected void init() {
 		super.init();
 		
-		addDrawableChild(new ButtonWidget(width / 2 - 155, height / 6 + 84, 150, 20,
-				Text.literal("Show Circle: " + (Equirectangular.drawCircle ? "ON" : "OFF")), (buttonWidget) -> {
+		addDrawableChild(ButtonWidget.builder(
+				Text.literal("Show Circle: " + (Equirectangular.drawCircle ? "ON" : "OFF")),
+				(buttonWidget) -> {
 					Equirectangular.drawCircle = !Equirectangular.drawCircle;
 					buttonWidget.setMessage(Text.literal("Show Circle: " + (Equirectangular.drawCircle ? "ON" : "OFF")));
 					ConfigManager.saveConfig();
-				}));
-		addDrawableChild(new ButtonWidget(width / 2 - 155, height / 6 + 132, 150, 20,
-				Text.literal("Stabilize Pitch: " + (Equirectangular.stabilizePitch ? "ON" : "OFF")), (buttonWidget) -> {
+				})
+				.position(width / 2 - 155, height / 6 + 84)
+				.size(150, 20)
+				.narrationSupplier((buttonWidget) -> Text.literal("Show Circle button. Can be On or OFF"))
+				.build());
+		addDrawableChild(ButtonWidget.builder(
+				Text.literal("Stabilize Pitch: " + (Equirectangular.stabilizePitch ? "ON" : "OFF")),
+				(buttonWidget) -> {
 					Equirectangular.stabilizePitch = !Equirectangular.stabilizePitch;
 					buttonWidget.setMessage(Text.literal("Stabilize Pitch: " + (Equirectangular.stabilizePitch ? "ON" : "OFF")));
 					ConfigManager.saveConfig();
-				}));
-		addDrawableChild(new ButtonWidget(width / 2 + 5, height / 6 + 132, 150, 20,
-				Text.literal("Stabilize Yaw: " + (Equirectangular.stabilizeYaw ? "ON" : "OFF")), (buttonWidget) -> {
+				})
+				.position(width / 2 - 155, height / 6 + 132)
+				.size(150, 20)
+				.narrationSupplier((buttonWidget) -> Text.literal("Stabilize Pitch button. Can be On or OFF"))
+				.build());
+		addDrawableChild(ButtonWidget.builder(
+				Text.literal("Stabilize Yaw: " + (Equirectangular.stabilizeYaw ? "ON" : "OFF")),
+				(buttonWidget) -> {
 					Equirectangular.stabilizeYaw = !Equirectangular.stabilizeYaw;
 					buttonWidget.setMessage(Text.literal("Stabilize Yaw: " + (Equirectangular.stabilizeYaw ? "ON" : "OFF")));
 					ConfigManager.saveConfig();
-				}));
+				})
+				.position(width / 2 + 5, height / 6 + 132)
+				.size(150, 20)
+				.narrationSupplier((buttonWidget) -> Text.literal("Stabilize Yaw button. Can be On or OFF"))
+				.build());
 	}
 }

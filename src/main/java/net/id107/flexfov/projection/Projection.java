@@ -189,7 +189,7 @@ public abstract class Projection {
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
 		
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, defaultFramebuffer.getColorAttachment().getMipLevels());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, defaultFramebuffer.getColorAttachment());
 		GL11.glBegin(GL11.GL_QUADS);
 		{
 			GL11.glTexCoord2f(BufferManager.getMinX(), BufferManager.getMinY());

@@ -9,7 +9,6 @@ import net.id107.flexfov.gui.SettingsGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
 @Mixin(OptionsScreen.class)
@@ -21,8 +20,8 @@ public abstract class OptionsScreenMixin extends Screen {
 	
 	@Inject(method = "init()V", at = @At(value = "TAIL"))
 	private void newButton(CallbackInfo callbackInfo) {
-		addDrawableChild(new ButtonWidget(width / 2 - 155, height / 6 + 15, 150, 20, Text.literal("Flex FOV Settings"), (buttonWidget) -> {
+		addDrawableChild(ButtonWidget.builder(Text.literal("Flex FOV Settings"), (buttonWidget) -> {
 			client.setScreen(SettingsGui.getGui(this));
-		}));
+		}).dimensions(width / 2 - 155, height / 6 + 15, 150, 20).narrationSupplier((buttonWidget) -> Text.literal("Opens the Flex FOV Settings GUI")).build());
 	}
 }

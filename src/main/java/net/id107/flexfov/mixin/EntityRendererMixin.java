@@ -1,5 +1,6 @@
 package net.id107.flexfov.mixin;
 
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -9,9 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
 
 @Mixin(EntityRenderer.class)
 public class EntityRendererMixin {
@@ -43,12 +42,12 @@ public class EntityRendererMixin {
 			matrixStack.pop();
 			MinecraftClient mc = MinecraftClient.getInstance();
 			Entity camera = mc.cameraEntity;
-			Vec3d cameraPos = camera.getPos().subtract(camera.prevX, camera.prevY, camera.prevZ).multiply(Projection.getTickDelta()).add(new Vec3d(camera.prevX, camera.prevY, camera.prevZ));
-			Vec3d entityPos = new Vec3d(currentEntity.getX(), currentEntity.getY(), currentEntity.getZ()).subtract(new Vec3d(currentEntity.prevX, currentEntity.prevY, currentEntity.prevZ)).multiply(Projection.getTickDelta()).add(new Vec3d(currentEntity.prevX, currentEntity.prevY, currentEntity.prevZ));
+			Vec3d cameraPos = camera.getPos().subtract(camera.lastX, camera.lastY, camera.lastZ).multiply(Projection.getTickDelta()).add(new Vec3d(camera.lastX, camera.lastY, camera.lastZ));
+			Vec3d entityPos = new Vec3d(currentEntity.getX(), currentEntity.getY(), currentEntity.getZ()).subtract(new Vec3d(currentEntity.lastX, currentEntity.lastY, currentEntity.lastZ)).multiply(Projection.getTickDelta()).add(new Vec3d(currentEntity.lastX, currentEntity.lastY, currentEntity.lastZ));
 			Vec3d dir = cameraPos.subtract(entityPos).normalize();
-			Quaternion quaternion = new Quaternion(0, 0, 0, 1);
-			quaternion.hamiltonProduct(Vec3f.POSITIVE_Y.getRadialQuaternion((float)Math.atan2(-dir.x, -dir.z)));
-			quaternion.hamiltonProduct(Vec3f.POSITIVE_X.getRadialQuaternion((float)Math.asin(dir.y)));
+			Quaternionf quaternion = new Quaternionf(0, 0, 0, 1);
+			quaternion.rotateAxis((float)Math.atan2(-dir.x, -dir.z), 0, 1, 0);
+			quaternion.rotateAxis((float)Math.asin(dir.y), 1, 0, 0);
 			matrixStack.multiply(quaternion);
 		}
 		return matrixStack;

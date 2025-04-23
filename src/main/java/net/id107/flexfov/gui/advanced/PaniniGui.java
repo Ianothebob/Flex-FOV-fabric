@@ -22,10 +22,17 @@ public class PaniniGui extends AdvancedGui {
 	protected void init() {
 		super.init();
 
-		DoubleOption FOV = new DoubleOption("paniniFov", 0, 360, 1,
-				(gameOptions) -> {return Projection.getProjection().getFovX();},
-				(gameOptions, number) -> {Projection.fov = number; ConfigManager.saveConfig();},
-				(gameOptions, doubleOption) -> {return new LiteralText("FOV: " + (int)Projection.getProjection().getFovX());});
+		SimpleOption<Double> FOV = new SimpleOption<>(
+				"paniniFov", // Identifier for localization
+				SimpleOption.emptyTooltip(),
+				(gameOptions, value) -> Text.literal("FOV: " + (int) (value * 360)), // Map [0,1] to [0,360] for display
+				SimpleOption.DoubleSliderCallbacks.INSTANCE, // Use DoubleSliderCallbacks with range [0,1]
+				Projection.getProjection().getFovX() / 360, // Default value normalized to [0,1]
+				(value) -> {
+					Projection.fov = value * 360; // Map [0,1] to [0,360] and save
+					ConfigManager.saveConfig();
+				}
+		);
 		/*SimpleOption<Integer> FOP = new SimpleOption("paniniFov",SimpleOption.emptyTooltip(),(optionText, value) -> {
 			Text var10000;
 			switch (value) {

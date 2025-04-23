@@ -17,11 +17,18 @@ public class FlexGui extends SettingsGui {
 	@Override
 	protected void init() {
 		super.init();
-		
-		SimpleOption<Double> FOV = new SimpleOption<Double>("flexFov", 0, 360, 1,
-				(gameOptions) -> {return Projection.getProjection().getFovX();},
-				(gameOptions, number) -> {Projection.fov = number; ConfigManager.saveConfig();},
-				(gameOptions, SimpleOption<Double>) -> {return Text.literal("FOV: " + (int)Projection.getProjection().getFovX());});
+
+		SimpleOption<Double> FOV = new SimpleOption<>(
+				"flexFov", // Identifier for localization
+				SimpleOption.emptyTooltip(),
+				(gameOptions, value) -> Text.literal("FOV: " + (int) (value * 360)), // Map [0,1] to [0,360] for display
+				SimpleOption.DoubleSliderCallbacks.INSTANCE, // Use DoubleSliderCallbacks with range [0,1]
+				Projection.getProjection().getFovX() / 360, // Default value normalized to [0,1]
+				(value) -> {
+					Projection.fov = value * 360; // Map [0,1] to [0,360] when saving
+					ConfigManager.saveConfig();
+				}
+		);
 		addDrawableChild(FOV.createWidget(client.options, width / 2 - 180, height / 6 + 36, 360));
 	}
 }
