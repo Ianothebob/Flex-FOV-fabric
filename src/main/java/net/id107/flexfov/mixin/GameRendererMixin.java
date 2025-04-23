@@ -44,7 +44,7 @@ public abstract class GameRendererMixin {
 	}
 	
 	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;isIntegratedServerRunning()Z", ordinal = 0))
-	private void renderPost(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) {
+	private void renderPost(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanorama = renderingPanoramaTemp;
 		client.options.getFov().setValue((int) fovTemp);
 		Projection.getProjection().saveRenderPass();

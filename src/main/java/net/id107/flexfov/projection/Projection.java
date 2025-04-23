@@ -1,8 +1,14 @@
 package net.id107.flexfov.projection;
 
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.fabricmc.fabric.mixin.client.gametest.screenshot.RenderTickCounterConstantAccessor;
+import net.minecraft.client.gl.GlResourceManager;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.render.RenderTickCounter.*;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import org.joml.Matrix3fc;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -22,6 +28,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
+
+import java.lang.reflect.Field;
 
 public abstract class Projection {
 	
@@ -150,7 +158,7 @@ public abstract class Projection {
 		}
 	}
 	
-	public void saveRenderPass() {
+	public void saveRenderPass() throws NoSuchFieldException, IllegalAccessException {
 		if (getResizeGui() && renderPass == 0) {
 			MinecraftClient mc = MinecraftClient.getInstance();
 			Window window = mc.getWindow();
@@ -163,19 +171,28 @@ public abstract class Projection {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			GL11.glClear(256);
 			MatrixStack matrixStack = new MatrixStack();
-			mc.inGameHud.render(matrixStack, tickDelta);
+			RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
+					20.0F,                           // Example TPS (ticks per second)
+					(long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
+					value -> 1000.0F / value         // Example FloatUnaryOperator
+			);
+			mc.inGameHud.render(new DrawContext(mc, VertexConsumerProvider.immediate(mc.getBufferBuilders().getBlockBufferBuilders().get(RenderLayer.getGui()))), dynamicTickCounter);
 			GL11.glClear(256);
 			if (mc.currentScreen != null) {
 				int i = (int)(mc.mouse.getX() * (double)mc.getWindow().getScaledWidth() / (double)mc.getWindow().getWidth());
 				int j = (int)(mc.mouse.getY() * (double)mc.getWindow().getScaledHeight() / (double)mc.getWindow().getHeight());
-				mc.currentScreen.render(matrixStack, i, j, (mc.getRenderTickCounter()).getDynamicDeltaTicks());
+				mc.currentScreen.render(new DrawContext(mc, VertexConsumerProvider.immediate(mc.getBufferBuilders().getBlockBufferBuilders().get(RenderLayer.getGui()))), i, j, (mc.getRenderTickCounter()).getDynamicDeltaTicks());
 			}
 		}
 		
 		Framebuffer defaultFramebuffer = MinecraftClient.getInstance().getFramebuffer();
 		Framebuffer targetFramebuffer = BufferManager.getFramebuffer();
-		
-		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, targetFramebuffer.fbo);
+
+		Field privateField = targetFramebuffer.getClass().getDeclaredField("index");
+		// Set the accessibility as true
+		privateField.setAccessible(true);
+
+		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, (int)privateField.get(targetFramebuffer));
 		GL11.glViewport(0, 0, targetFramebuffer.textureWidth, targetFramebuffer.textureHeight);
 		GlStateManager._glFramebufferTexture2D(GlConst.GL_FRAMEBUFFER, GlConst.GL_COLOR_ATTACHMENT0,
 				GL11.GL_TEXTURE_2D, BufferManager.framebufferTextures[renderPass], 0);
@@ -188,8 +205,8 @@ public abstract class Projection {
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
-		
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, defaultFramebuffer.getColorAttachment());
+
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, GlResourceManager.clearColorTexture(defaultFramebuffer.getColorAttachment()));
 		GL11.glBegin(GL11.GL_QUADS);
 		{
 			GL11.glTexCoord2f(BufferManager.getMinX(), BufferManager.getMinY());
@@ -209,7 +226,7 @@ public abstract class Projection {
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPopMatrix();
 		
-		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, defaultFramebuffer.fbo);
+		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, privateField.getInt(defaultFramebuffer));
 	}
 	
 	public void loadUniforms(float tickDelta) {
