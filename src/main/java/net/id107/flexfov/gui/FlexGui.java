@@ -7,12 +7,18 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.text.Text;
 
+import java.io.IOException;
+
 public class FlexGui extends SettingsGui {
 	
 	public FlexGui(Screen parent) {
 		super(parent);
-		Projection.setProjection(new Flex());
-	}
+        try {
+            Projection.setProjection(new Flex());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Override
 	protected void init() {

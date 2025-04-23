@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.text.Text;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 import static net.minecraft.client.option.GameOptions.getGenericValueText;
@@ -15,8 +16,12 @@ public class PaniniGui extends AdvancedGui {
 	
 	public PaniniGui(Screen parent) {
 		super(parent);
-		Projection.setProjection(new Panini());
-	}
+        try {
+            Projection.setProjection(new Panini());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Override
 	protected void init() {

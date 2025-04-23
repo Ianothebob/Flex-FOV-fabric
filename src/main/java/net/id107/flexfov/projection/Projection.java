@@ -29,6 +29,7 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 
 public abstract class Projection {
@@ -61,7 +62,7 @@ public abstract class Projection {
 		return currentProjection;
 	}
 	
-	public static void setProjection(Projection projection) {
+	public static void setProjection(Projection projection) throws IOException {
 		currentProjection = projection;
 		if (shader != null) {
 			shader.deleteShaderProgram();
@@ -69,13 +70,13 @@ public abstract class Projection {
 		}
 	}
 	
-	public String getVertexShader() {
+	public String getVertexShader() throws IOException {
 		return Reader.read("flexfov:shaders/quad.vs");
 	}
 	
-	public abstract String getFragmentShader();
+	public abstract String getFragmentShader() throws IOException;
 	
-	public void renderWorld(float tickDelta, long startTime, boolean tick) {
+	public void renderWorld(float tickDelta, long startTime, boolean tick) throws NoSuchFieldException, IllegalAccessException, IOException {
 		MinecraftClient mc = MinecraftClient.getInstance();
 		Projection.tickDelta = tickDelta;
 		int displayWidth = mc.getWindow().getWidth();
@@ -205,6 +206,7 @@ public abstract class Projection {
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
+
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, GlResourceManager.clearColorTexture(defaultFramebuffer.getColorAttachment()));
 		GL11.glBegin(GL11.GL_QUADS);

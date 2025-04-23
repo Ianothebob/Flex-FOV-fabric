@@ -2,10 +2,12 @@ package net.id107.flexfov.projection;
 
 import net.id107.flexfov.Reader;
 
+import java.io.IOException;
+
 public class Hammer extends Projection {
 
 	@Override
-	public String getFragmentShader() {
+	public String getFragmentShader() throws IOException {
 		return Reader.read("flexfov:shaders/hammer.fs");
 	}
 	

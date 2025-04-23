@@ -4,13 +4,15 @@ import org.lwjgl.opengl.GL20;
 
 import net.id107.flexfov.Reader;
 
+import java.io.IOException;
+
 public class Fisheye extends Projection {
 
 	public static boolean fullFrame = false;
 	public static int fisheyeType = 3;
 	
 	@Override
-	public String getFragmentShader() {
+	public String getFragmentShader() throws IOException {
 		return Reader.read("flexfov:shaders/fisheye.fs");
 	}
 	

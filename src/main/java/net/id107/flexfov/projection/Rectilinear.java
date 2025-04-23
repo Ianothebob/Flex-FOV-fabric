@@ -3,10 +3,12 @@ package net.id107.flexfov.projection;
 import net.id107.flexfov.Reader;
 import net.minecraft.client.util.math.MatrixStack;
 
+import java.io.IOException;
+
 public class Rectilinear extends Projection {
 
 	@Override
-	public String getFragmentShader() {
+	public String getFragmentShader() throws IOException {
 		return Reader.read("flexfov:shaders/error.fs");
 	}
 	

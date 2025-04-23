@@ -7,6 +7,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.Entity;
 
+import java.io.IOException;
+
 public class Equirectangular extends Projection {
 
 	public static boolean drawCircle = false;
@@ -14,7 +16,7 @@ public class Equirectangular extends Projection {
 	public static boolean stabilizeYaw = false;
 	
 	@Override
-	public String getFragmentShader() {
+	public String getFragmentShader() throws IOException {
 		return Reader.read("flexfov:shaders/equirectangular.fs");
 	}
 	
@@ -32,10 +34,10 @@ public class Equirectangular extends Projection {
 		float pitch = 0;
 		float yaw = 0;
 		if (stabilizePitch) {
-			pitch = entity.prevPitch + (entity.getPitch() - entity.prevPitch) * tickDelta;
+			pitch = entity.lastPitch + (entity.getPitch() - entity.lastPitch) * tickDelta;
 		}
 		if (stabilizeYaw) {
-			yaw = entity.prevYaw + (entity.getYaw() - entity.prevYaw) * tickDelta;
+			yaw = entity.lastYaw + (entity.getYaw() - entity.lastYaw) * tickDelta;
 		}
 		if (mc.options.getPerspective() == Perspective.THIRD_PERSON_FRONT) {
 			pitch = -pitch;

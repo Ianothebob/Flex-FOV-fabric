@@ -7,12 +7,18 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.text.Text;
 
+import java.io.IOException;
+
 public class CylinderGui extends AdvancedGui {
 
 	public CylinderGui(Screen parent) {
 		super(parent);
-		Projection.setProjection(new Cylinder());
-	}
+        try {
+            Projection.setProjection(new Cylinder());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Override
 	protected void init() {

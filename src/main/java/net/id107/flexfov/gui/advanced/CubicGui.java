@@ -7,12 +7,18 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
+import java.io.IOException;
+
 public class CubicGui extends AdvancedGui {
 
 	public CubicGui(Screen parent) {
 		super(parent);
-		Projection.setProjection(new Cubic());
-	}
+        try {
+            Projection.setProjection(new Cubic());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Override
 	protected void init() {

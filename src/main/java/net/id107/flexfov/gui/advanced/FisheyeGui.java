@@ -8,12 +8,18 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.text.Text;
 
+import java.io.IOException;
+
 public class FisheyeGui extends AdvancedGui {
 	
 	public FisheyeGui(Screen parent) {
 		super(parent);
-		Projection.setProjection(new Fisheye());
-	}
+        try {
+            Projection.setProjection(new Fisheye());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Override
 	protected void init() {

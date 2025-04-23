@@ -6,13 +6,15 @@ import org.lwjgl.opengl.GL30;
 
 import net.id107.flexfov.projection.Projection;
 
+import java.io.IOException;
+
 public class ShaderManager {
 
 	private int shaderProgram;
 	private int vertexShader;
 	private int fragmentShader;
 	
-	public void createShaderProgram(Projection projection) {
+	public void createShaderProgram(Projection projection) throws IOException {
 		if (shaderProgram != 0) return;
 		
 		shaderProgram = GL20.glCreateProgram();

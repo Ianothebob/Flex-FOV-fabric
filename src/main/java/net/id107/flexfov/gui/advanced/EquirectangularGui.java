@@ -7,12 +7,18 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
+import java.io.IOException;
+
 public class EquirectangularGui extends AdvancedGui {
 
 	public EquirectangularGui(Screen parent) {
 		super(parent);
-		Projection.setProjection(new Equirectangular());
-	}
+        try {
+            Projection.setProjection(new Equirectangular());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Override
 	protected void init() {

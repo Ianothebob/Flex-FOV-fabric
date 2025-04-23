@@ -18,6 +18,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 
+import java.io.IOException;
+
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
 	@Shadow final MinecraftClient client;
@@ -35,13 +37,17 @@ public abstract class GameRendererMixin {
 	}
 	
 	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V", ordinal = 0))
-	private void renderPre(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) {
+	private void renderPre(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanoramaTemp = renderingPanorama;
 		renderingPanorama = Projection.getProjection().shouldOverrideFOV();
 		fovTemp = client.options.getFov().getValue();
 		client.options.getFov().setValue((int) Projection.getProjection().getPassFOV(fovTemp));
-		Projection.getProjection().renderWorld(tickDelta, startTime, tick);
-	}
+        try {
+            Projection.getProjection().renderWorld(tickDelta, startTime, tick);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;isIntegratedServerRunning()Z", ordinal = 0))
 	private void renderPost(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
