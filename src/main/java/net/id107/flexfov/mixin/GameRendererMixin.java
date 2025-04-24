@@ -31,54 +31,58 @@ public abstract class GameRendererMixin {
 		client = null;
 	}
 	
-	@Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)D", at = @At(value = "RETURN", ordinal = 0), cancellable = true)
+	@Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)F", at = @At(value = "RETURN", ordinal = 0), cancellable = true)
 	private void panoramaFov(CallbackInfoReturnable<Double> callbackInfo) {
 		callbackInfo.setReturnValue((double)Projection.getProjection().getPassFOV(90));
 	}
 	
-	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V", ordinal = 0))
-	private void renderPre(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
+	@Inject(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V", ordinal = 0))
+	private void renderPre(RenderTickCounter renderTickCounter, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanoramaTemp = renderingPanorama;
 		renderingPanorama = Projection.getProjection().shouldOverrideFOV();
 		fovTemp = client.options.getFov().getValue();
 		client.options.getFov().setValue((int) Projection.getProjection().getPassFOV(fovTemp));
         try {
-            Projection.getProjection().renderWorld(tickDelta, startTime, tick);
+
+            Projection.getProjection().renderWorld(/*tickDelta, startTime*/renderTickCounter, tick);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
+        } catch (ClassCastException e) {
+			System.out.println("Invalid projection");
+			throw new RuntimeException(e);
+		}
     }
 	
-	@Inject(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;isIntegratedServerRunning()Z", ordinal = 0))
-	private void renderPost(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
+	@Inject(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;updateWorldIcon()V", ordinal = 0))
+	private void renderPost(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanorama = renderingPanoramaTemp;
 		client.options.getFov().setValue((int) fovTemp);
 		Projection.getProjection().saveRenderPass();
-		Projection.getProjection().loadUniforms(tickDelta);
-		Projection.getProjection().runShader(tickDelta);
+		Projection.getProjection().loadUniforms(tickCounter.getDynamicDeltaTicks());
+		Projection.getProjection().runShader(tickCounter.getDynamicDeltaTicks());
 	}
 	
-	@ModifyVariable(method = "renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V",
-			ordinal = 1,
-			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobViewWhenHurt(Lnet/minecraft/client/util/math/MatrixStack;F)V", ordinal = 0))
+	@ModifyVariable(method = "renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V",
+			ordinal = 0,
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;tiltViewWhenHurt(Lnet/minecraft/client/util/math/MatrixStack;F)V", ordinal = 0))
 	private MatrixStack updateCamera(MatrixStack matrixStack) {
 		Projection.getProjection().rotateCamera(matrixStack);
 		return matrixStack;
 	}
 	
-	@Redirect(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/util/math/MatrixStack;F)V"))
-	private void renderHud(InGameHud inGameHud, DrawContext drawContext, float tickDelta) {
+	@Redirect(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/render/RenderTickCounter;)V"))
+	private void renderHud(InGameHud inGameHud, DrawContext drawContext, RenderTickCounter tickCounter) {
 		if (!Projection.getProjection().getResizeGui()) {
-			RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
+			/*RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
 					20.0F,                           // Example TPS (ticks per second)
 					(long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
 					value -> 1000.0F / value         // Example FloatUnaryOperator
-			);
-			inGameHud.render(drawContext, dynamicTickCounter);
+			);*/
+			inGameHud.render(drawContext, tickCounter);
 		}
 	}
 	
-	@Redirect(method = "render(FJZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
+	@Redirect(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
 	private void renderCurrentScreen(Screen currentScreen, DrawContext drawContext, int mouseX, int mouseY, float delta) {
 		if (!Projection.getProjection().getResizeGui()) {
 			currentScreen.render(drawContext, mouseX, mouseY, delta);

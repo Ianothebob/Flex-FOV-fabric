@@ -13,7 +13,7 @@ public class Fisheye extends Projection {
 	
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/fisheye.fs");
+		return Reader.read("shaders/fisheye.fs");
 	}
 	
 	@Override

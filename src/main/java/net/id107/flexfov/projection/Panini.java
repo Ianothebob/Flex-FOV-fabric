@@ -8,6 +8,6 @@ public class Panini extends Projection {
 
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/panini.fs");
+		return Reader.read("shaders/panini.fs");
 	}
 }

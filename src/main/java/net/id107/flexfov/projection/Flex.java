@@ -8,7 +8,7 @@ public class Flex extends Projection {
 
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/flex.fs");
+		return Reader.read("shaders/flex.fs");
 	}
 	
 	@Override

@@ -10,7 +10,7 @@ public class Cylinder extends Projection {
 	
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/cylinder.fs");
+		return Reader.read("shaders/cylinder.fs");
 	}
 	
 	@Override

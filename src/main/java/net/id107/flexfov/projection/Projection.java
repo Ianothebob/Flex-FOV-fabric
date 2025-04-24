@@ -74,65 +74,77 @@ public abstract class Projection {
 	}
 	
 	public String getVertexShader() throws IOException {
-		return Reader.read("flexfov:shaders/quad.vs");
+		return Reader.read("shaders/quad.vs");
 	}
 	
 	public abstract String getFragmentShader() throws IOException;
 	
-	public void renderWorld(float tickDelta, long startTime, boolean tick) throws NoSuchFieldException, IllegalAccessException, IOException {
-		MinecraftClient mc = MinecraftClient.getInstance();
-		Projection.tickDelta = tickDelta;
-		int displayWidth = mc.getWindow().getWidth();
-		int displayHeight = mc.getWindow().getHeight();
-		hudHidden = mc.options.hudHidden;
-		
-		if (BufferManager.getFramebuffer() == null) {
-			BufferManager.createFramebuffer();
-			shader.createShaderProgram(getProjection());
-			screenWidth = displayWidth;
-			screenHeight = displayHeight;
+	public void renderWorld(/*float tickDelta, long startTime*/RenderTickCounter renderTickCounter, boolean tick) throws NoSuchFieldException, IllegalAccessException, IOException {
+        try {
+            MinecraftClient mc = MinecraftClient.getInstance();
+            Projection.tickDelta = renderTickCounter.getDynamicDeltaTicks();
+			System.out.println("tickDelta");
+            int displayWidth = mc.getWindow().getWidth();
+            int displayHeight = mc.getWindow().getHeight();
+            hudHidden = mc.options.hudHidden;
+
+            if (BufferManager.getFramebuffer() == null) {
+                BufferManager.createFramebuffer();
+                shader.createShaderProgram(getProjection());
+                screenWidth = displayWidth;
+                screenHeight = displayHeight;
+            }
+
+            if (screenWidth != displayWidth || screenHeight != displayHeight) {
+                shader.deleteShaderProgram();
+                BufferManager.deleteFramebuffer();
+                BufferManager.createFramebuffer();
+                shader.createShaderProgram(getProjection());
+                screenWidth = displayWidth;
+                screenHeight = displayHeight;
+            }
+
+            if (Math.max(getFovX(), getFovY()) > 90 || zoom < 0) {
+                for (renderPass = 1; renderPass < 5; renderPass++) {
+                    GL11.glViewport(0, 0, displayWidth, displayHeight);
+                    mc.worldRenderer.scheduleTerrainUpdate();
+                    /*RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
+                            20.0F,                           // Example TPS (ticks per second)
+                            startTime + (long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
+                            value -> 1000.0F / value         // Example FloatUnaryOperator
+                    );*/
+mc.gameRenderer.renderWorld(renderTickCounter);
+                    saveRenderPass();
+                }
+                if (Math.max(getFovX(), getFovY()) > 250 || zoom < 0) {
+                    renderPass = 5;
+                    GL11.glViewport(0, 0, displayWidth, displayHeight);
+                    mc.worldRenderer.scheduleTerrainUpdate();
+                    /*RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
+                            20.0F,                           // Example TPS (ticks per second)
+                            startTime + (long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
+                            value -> 1000.0F / value         // Example FloatUnaryOperator
+                    );*/
+                    mc.gameRenderer.renderWorld(renderTickCounter);
+                    saveRenderPass();
+                }
+            }
+            renderPass = 0;
+            GL11.glViewport(0, 0, displayWidth, displayHeight);
+            mc.worldRenderer.scheduleTerrainUpdate();
+
+            mc.options.hudHidden = hudHidden;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (ClassCastException e) {
+			System.out.println(e.getCause());
+			throw new RuntimeException(e);
 		}
-		
-		if (screenWidth != displayWidth || screenHeight != displayHeight) {
-			shader.deleteShaderProgram();
-			BufferManager.deleteFramebuffer();
-			BufferManager.createFramebuffer();
-			shader.createShaderProgram(getProjection());
-			screenWidth = displayWidth;
-			screenHeight = displayHeight;
-		}
-		
-		if (Math.max(getFovX(), getFovY()) > 90 || zoom < 0) {
-			for (renderPass = 1; renderPass < 5; renderPass++) {
-				GL11.glViewport(0, 0, displayWidth, displayHeight);
-				mc.worldRenderer.scheduleTerrainUpdate();
-				RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
-						20.0F,                           // Example TPS (ticks per second)
-						startTime + (long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
-						value -> 1000.0F / value         // Example FloatUnaryOperator
-				);
-                mc.gameRenderer.renderWorld(dynamicTickCounter);
-				saveRenderPass();
-			}
-			if (Math.max(getFovX(), getFovY()) > 250 || zoom < 0) {
-				renderPass = 5;
-				GL11.glViewport(0, 0, displayWidth, displayHeight);
-				mc.worldRenderer.scheduleTerrainUpdate();
-				RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
-						20.0F,                           // Example TPS (ticks per second)
-						startTime + (long) (tickDelta * 1000), // Calculate timeMillis using startTime and tickDelta
-						value -> 1000.0F / value         // Example FloatUnaryOperator
-				);
-				mc.gameRenderer.renderWorld(dynamicTickCounter);
-				saveRenderPass();
-			}
-		}
-		renderPass = 0;
-		GL11.glViewport(0, 0, displayWidth, displayHeight);
-		mc.worldRenderer.scheduleTerrainUpdate();
-		
-		mc.options.hudHidden = hudHidden;
-	}
+    }
 	
 	public void rotateCamera(MatrixStack matrixStack) {
 		Matrix4f matrix;

@@ -17,7 +17,7 @@ public class Equirectangular extends Projection {
 	
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/equirectangular.fs");
+		return Reader.read("shaders/equirectangular.fs");
 	}
 	
 	@Override

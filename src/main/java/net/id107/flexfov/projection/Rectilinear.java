@@ -1,6 +1,7 @@
 package net.id107.flexfov.projection;
 
 import net.id107.flexfov.Reader;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.util.math.MatrixStack;
 
 import java.io.IOException;
@@ -9,11 +10,11 @@ public class Rectilinear extends Projection {
 
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/error.fs");
+		return Reader.read("shaders/error.fs");
 	}
 	
 	@Override
-	public void renderWorld(float tickDelta, long startTime, boolean tick) {}
+	public void renderWorld(RenderTickCounter renderTickCounter, boolean tick) {}
 	
 	@Override
 	public void rotateCamera(MatrixStack matrixStack) {}

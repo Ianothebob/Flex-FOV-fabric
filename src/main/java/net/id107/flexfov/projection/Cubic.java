@@ -8,7 +8,7 @@ public class Cubic extends Projection {
 
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/cubic.fs");
+		return Reader.read("shaders/cubic.fs");
 	}
 	
 	@Override

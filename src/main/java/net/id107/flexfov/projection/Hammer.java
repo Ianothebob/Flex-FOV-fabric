@@ -8,7 +8,7 @@ public class Hammer extends Projection {
 
 	@Override
 	public String getFragmentShader() throws IOException {
-		return Reader.read("flexfov:shaders/hammer.fs");
+		return Reader.read("shaders/hammer.fs");
 	}
 	
 	@Override
