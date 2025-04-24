@@ -32,25 +32,26 @@ public abstract class GameRendererMixin {
 	}
 	
 	@Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)F", at = @At(value = "RETURN", ordinal = 0), cancellable = true)
-	private void panoramaFov(CallbackInfoReturnable<Double> callbackInfo) {
-		callbackInfo.setReturnValue((double)Projection.getProjection().getPassFOV(90));
+	private void panoramaFov(CallbackInfoReturnable<Float> callbackInfo) {
+		callbackInfo.setReturnValue(((Double) Projection.getProjection().getPassFOV(90)).floatValue());
 	}
 	
 	@Inject(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V", ordinal = 0))
 	private void renderPre(RenderTickCounter renderTickCounter, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanoramaTemp = renderingPanorama;
+		System.out.println("renderingPanorama");
 		renderingPanorama = Projection.getProjection().shouldOverrideFOV();
+		System.out.println("renderingPanorama2");
 		fovTemp = client.options.getFov().getValue();
+		System.out.println("fovTemp");
 		client.options.getFov().setValue((int) Projection.getProjection().getPassFOV(fovTemp));
+		System.out.println("fovTemp2");
         try {
-
             Projection.getProjection().renderWorld(/*tickDelta, startTime*/renderTickCounter, tick);
+			System.out.println("renderWorld");
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } catch (ClassCastException e) {
-			System.out.println("Invalid projection");
-			throw new RuntimeException(e);
-		}
+        }
     }
 	
 	@Inject(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;updateWorldIcon()V", ordinal = 0))

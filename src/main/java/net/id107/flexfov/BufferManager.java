@@ -18,7 +18,7 @@ public class BufferManager {
 	private static float minY;
 	private static float maxY;
 	private static float fov;
-	
+
 	private static int displayWidth;
 	private static int displayHeight;
 	
@@ -37,7 +37,8 @@ public class BufferManager {
 		Window window = MinecraftClient.getInstance().getWindow();
 		int width = Math.min(window.getWidth(), window.getHeight());
 		framebuffer = new net.minecraft.client.gl.SimpleFramebuffer(null, width, width, false);
-		
+
+
 		for (int i = 0; i < framebufferTextures.length; i++) {
 			framebufferTextures[i] = GL11.glGenTextures();
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, framebufferTextures[i]);
