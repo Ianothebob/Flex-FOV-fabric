@@ -2,15 +2,17 @@ package net.id107.flexfov;
 
 import java.nio.ByteBuffer;
 
+import com.mojang.blaze3d.opengl.GlConst;
 import org.lwjgl.opengl.GL11;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.util.Window;
 
 public class BufferManager {
 
-	private static Framebuffer framebuffer;
+	private static GlFramebuffer framebuffer;
 	public static int[] framebufferTextures = new int[6];
 	
 	private static float minX;
@@ -36,18 +38,17 @@ public class BufferManager {
 		
 		Window window = MinecraftClient.getInstance().getWindow();
 		int width = Math.min(window.getWidth(), window.getHeight());
-		framebuffer = new net.minecraft.client.gl.SimpleFramebuffer(null, width, width, false);
-
+		framebuffer = new GlFramebuffer(null, width, width, false);
 
 		for (int i = 0; i < framebufferTextures.length; i++) {
 			framebufferTextures[i] = GL11.glGenTextures();
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, framebufferTextures[i]);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D,framebufferTextures[i]);
 			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, width, width,
-					0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer)null);
+					0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
-			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GlConst.GL_CLAMP_TO_EDGE);
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GlConst.GL_CLAMP_TO_EDGE);
 		}
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		
@@ -86,7 +87,7 @@ public class BufferManager {
 		framebuffer = null;
 	}
 	
-	public static Framebuffer getFramebuffer() {
+	public static GlFramebuffer getFramebuffer() {
 		return framebuffer;
 	}
 

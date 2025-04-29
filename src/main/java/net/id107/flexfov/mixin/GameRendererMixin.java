@@ -1,7 +1,10 @@
 package net.id107.flexfov.mixin;
 
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.render.item.HeldItemRenderer;
+import net.minecraft.resource.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,11 +29,11 @@ public abstract class GameRendererMixin {
 	@Shadow boolean renderingPanorama;
 	private boolean renderingPanoramaTemp;
 	private double fovTemp;
-	
+
 	public GameRendererMixin() {
 		client = null;
 	}
-	
+
 	@Inject(method = "getFov(Lnet/minecraft/client/render/Camera;FZ)F", at = @At(value = "RETURN", ordinal = 0), cancellable = true)
 	private void panoramaFov(CallbackInfoReturnable<Float> callbackInfo) {
 		callbackInfo.setReturnValue(((Double) Projection.getProjection().getPassFOV(90)).floatValue());
@@ -39,16 +42,12 @@ public abstract class GameRendererMixin {
 	@Inject(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V", ordinal = 0))
 	private void renderPre(RenderTickCounter renderTickCounter, boolean tick, CallbackInfo callbackInfo) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanoramaTemp = renderingPanorama;
-		System.out.println("renderingPanorama");
 		renderingPanorama = Projection.getProjection().shouldOverrideFOV();
-		System.out.println("renderingPanorama2");
 		fovTemp = client.options.getFov().getValue();
-		System.out.println("fovTemp");
 		client.options.getFov().setValue((int) Projection.getProjection().getPassFOV(fovTemp));
-		System.out.println("fovTemp2");
+		GameRenderer gameRendererInstance = (GameRenderer) (Object) this;
         try {
-            Projection.getProjection().renderWorld(/*tickDelta, startTime*/renderTickCounter, tick);
-			System.out.println("renderWorld");
+            Projection.getProjection().renderWorld(/*tickDelta, startTime*/renderTickCounter, tick, gameRendererInstance);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +57,8 @@ public abstract class GameRendererMixin {
 	private void renderPost(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) throws NoSuchFieldException, IllegalAccessException {
 		renderingPanorama = renderingPanoramaTemp;
 		client.options.getFov().setValue((int) fovTemp);
-		Projection.getProjection().saveRenderPass();
+		GameRenderer gameRendererInstance = (GameRenderer) (Object) this;
+		Projection.getProjection().saveRenderPass(gameRendererInstance);
 		Projection.getProjection().loadUniforms(tickCounter.getDynamicDeltaTicks());
 		Projection.getProjection().runShader(tickCounter.getDynamicDeltaTicks());
 	}

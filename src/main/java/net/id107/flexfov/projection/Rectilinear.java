@@ -1,6 +1,7 @@
 package net.id107.flexfov.projection;
 
 import net.id107.flexfov.Reader;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.util.math.MatrixStack;
 
@@ -14,13 +15,13 @@ public class Rectilinear extends Projection {
 	}
 	
 	@Override
-	public void renderWorld(RenderTickCounter renderTickCounter, boolean tick) {}
+	public void renderWorld(RenderTickCounter renderTickCounter, boolean tick, GameRenderer gameRenderer) {}
 	
 	@Override
 	public void rotateCamera(MatrixStack matrixStack) {}
 	
 	@Override
-	public void saveRenderPass() {}
+	public void saveRenderPass(GameRenderer gameRenderer) {}
 	
 	@Override
 	public void loadUniforms(float tickDelta) {}
