@@ -127,7 +127,7 @@ public abstract class Projection {
                 }
                 if (Math.max(getFovX(), getFovY()) > 250d || zoom < 0f) {
                     renderPass = 5;
-                    GL11.glViewport(0, 0, displayWidth, displayHeight);
+                    GlStateManager._viewport(0, 0, displayWidth, displayHeight);
                     mc.worldRenderer.scheduleTerrainUpdate();
                     /*RenderTickCounter.Dynamic dynamicTickCounter = new RenderTickCounter.Dynamic(
                             20.0F,                           // Example TPS (ticks per second)
@@ -211,9 +211,9 @@ public abstract class Projection {
 					.perspective(fovRadians, (float) aspectRatio, 0.05f, 1000.0f); // Near and far planes
 
 // Apply this projection matrix
-			RenderSystem.setProjectionMatrix(perspectiveMatrix, ProjectionType.PERSPECTIVE);
+			RenderSystem.setProjectionMatrix(perspectiveMatrix, ProjectionType.ORTHOGRAPHIC);
 			/*GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			GL11.glLoadIdentity();
+			GL11.glLoadId	entity();
 			GL11.glTranslatef(0.0F, 0.0F, -2000.0F);
 			GL11.glClear(256);*/
 			RenderSystem.getModelViewMatrix().set(new Matrix4f().identity());
@@ -272,6 +272,9 @@ public abstract class Projection {
 		GL11.glPopMatrix();
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPopMatrix();*/
+		Matrix4f textureMatrix = RenderSystem.getTextureMatrix();
+		RenderSystem.setupDefaultState();
+		RenderSystem.setTextureMatrix(textureMatrix);
 		
 		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, 0);
 	}
@@ -294,7 +297,8 @@ public abstract class Projection {
 			for (int y = 0; y < 4; y++) {
 				for (int x = 0; x < 4; x++) {
 					pixelOffestUniform = GlStateManager._glGetUniformLocation(shaderProgram,"pixelOffset[" + (y*4+x) + "]"); /*GL20.glGetUniformLocation(shaderProgram, "pixelOffset[" + (y*4+x) + "]");*/
-					GlStateManager._glUniform2(pixelOffestUniform, java.nio.FloatBuffer.wrap(new float[]{left + right*x, top + bottom*y}));/*GL20.glUniform2f(pixelOffestUniform, left + right*x, top + bottom*y);*/
+					RenderSystem.assertOnRenderThread();
+					GL20.glUniform2f(pixelOffestUniform, left + right*x, top + bottom*y);
 				}
 			}
 		} else if (getAntialiasing() == 4) {
@@ -325,20 +329,25 @@ public abstract class Projection {
 		GlStateManager._glUniform1i(texUniform, 3) /*GL20.glUniform1i(texUniform, 3)*/;
 		
 		int fovxUniform = GlStateManager._glGetUniformLocation(shaderProgram, "fovx") /*GL20.glGetUniformLocation(shaderProgram, "fovx")*/;
-		GlStateManager._glUniform1(fovxUniform, java.nio.FloatBuffer.wrap(new float[]{(float) getFovX()})) /*GL20.glUniform1f(fovxUniform, (float) getFovX())*/;
+		RenderSystem.assertOnRenderThread();
+		GL20.glUniform1f(fovxUniform, (float) getFovX());
 		int fovyUniform = GlStateManager._glGetUniformLocation(shaderProgram, "fovy") /*GL20.glGetUniformLocation(shaderProgram, "fovy")*/;
-		GlStateManager._glUniform1(fovyUniform, java.nio.FloatBuffer.wrap(new float[]{(float) getFovY()})) /*GL20.glUniform1f(fovyUniform, (float) getFovY())*/;
+		RenderSystem.assertOnRenderThread();
+		GL20.glUniform1f(fovyUniform, (float) getFovY());
 		
 		int backgroundUniform = GlStateManager._glGetUniformLocation(shaderProgram, "backgroundColor") /*GL20.glGetUniformLocation(shaderProgram, "backgroundColor")*/;
 		float backgroundColor[] = getBackgroundColor(false);
 		if (backgroundColor != null) {
-			GlStateManager._glUniform4(backgroundUniform, java.nio.FloatBuffer.wrap(new float[]{backgroundColor[0], backgroundColor[1], backgroundColor[2], 1})) /*GL20.glUniform4f(backgroundUniform, backgroundColor[0], backgroundColor[1], backgroundColor[2], 1)*/;
+			RenderSystem.assertOnRenderThread();
+			GL20.glUniform4f(backgroundUniform, backgroundColor[0], backgroundColor[1], backgroundColor[2], 1);
 		} else {
-			GlStateManager._glUniform4(backgroundUniform, java.nio.FloatBuffer.wrap(new float[]{0, 0, 0, 1})) /*GL20.glUniform4f(backgroundUniform, 0, 0, 0, 1)*/;
+			RenderSystem.assertOnRenderThread();
+			GL20.glUniform4f(backgroundUniform, 0, 0, 0, 1);
 		}
 		
 		int zoomUniform = GlStateManager._glGetUniformLocation(shaderProgram, "zoom") /*GL20.glGetUniformLocation(shaderProgram, "zoom")*/;
-		GlStateManager._glUniform1(zoomUniform, java.nio.FloatBuffer.wrap(new float[]{(float)Math.pow(2, -zoom)})) /*GL20.glUniform1f(zoomUniform, (float)Math.pow(2, -zoom))*/;
+		RenderSystem.assertOnRenderThread();
+		GL20.glUniform1f(zoomUniform, (float)Math.pow(2, -zoom));
 
 		int drawCursorUniform = GlStateManager._glGetUniformLocation(shaderProgram, "drawCursor") /*GL20.glGetUniformLocation(shaderProgram, "drawCursor")*/;
 		GlStateManager._glUniform1i(drawCursorUniform, (getResizeGui() && mc.currentScreen != null) ? 1 : 0) /*GL20.glUniform1i(drawCursorUniform, (getResizeGui() && mc.currentScreen != null) ? 1 : 0)*/;
@@ -348,56 +357,77 @@ public abstract class Projection {
 		float mouseY = (float)mc.mouse.getY() / (float)window.getHeight();
 		mouseX = (mouseX - 0.5f) * window.getWidth() / (float)window.getHeight() + 0.5f;
 		mouseX = Math.max(0, Math.min(1, mouseX));
-		GlStateManager._glUniform2(cursorPosUniform, java.nio.FloatBuffer.wrap(new float[]{mouseX, 1-mouseY})) /*GL20.glUniform2f(cursorPosUniform, mouseX, 1-mouseY)*/;
+		RenderSystem.assertOnRenderThread();
+		GL20.glUniform2f(cursorPosUniform, mouseX, 1-mouseY);
 	}
 	
 	public void runShader(float tickDelta) {
 		int displayWidth = MinecraftClient.getInstance().getWindow().getWidth();
 		int displayHeight = MinecraftClient.getInstance().getWindow().getHeight();
-		GL13.glActiveTexture(GL13.GL_TEXTURE2);
-		int lightmap = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+		/*GL13.glActiveTexture(GL13.GL_TEXTURE2);*/
+		GlStateManager.glActiveTexture(GL13.GL_TEXTURE2);
+		int lightmap = GlStateManager._getInteger(GL11.GL_TEXTURE_BINDING_2D); /*GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);*/
 
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		GlStateManager._clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);/*GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);*/
+		/*GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPushMatrix();
 		GL11.glLoadIdentity();
-		GL11.glOrtho(-1, 1, -1, 1, -1, 1);
-		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		GL11.glOrtho(-1, 1, -1, 1, -1, 1);*/
+		RenderSystem.setProjectionMatrix(new Matrix4f().identity().ortho(-1, 1, -1, 1, -1, 1), ProjectionType.ORTHOGRAPHIC);
+		/*GL11.glMatrixMode(GL11.GL_MODELVIEW);
 		GL11.glPushMatrix();
-		GL11.glLoadIdentity();
+		GL11.glLoadIdentity();*/
+		RenderSystem.getModelViewMatrix().set(new Matrix4f().identity());
 
 		for (int i = 0; i < BufferManager.framebufferTextures.length; i++) {
-			GL13.glActiveTexture(GL13.GL_TEXTURE0+i);
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, BufferManager.framebufferTextures[i]);
+			/*GL13.glActiveTexture(GL13.GL_TEXTURE0+i);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, BufferManager.framebufferTextures[i]);*/
+			GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);
+			GlStateManager._bindTexture(BufferManager.framebufferTextures[i]);
 		}
-		GL11.glViewport(0, 0, displayWidth, displayHeight);
-		GL11.glBegin(GL11.GL_QUADS);
+		/*GL11.glViewport(0, 0, displayWidth, displayHeight);*/
+		GlStateManager._viewport(0, 0, displayWidth, displayHeight);
+		/*GL11.glBegin(GL11.GL_QUADS);*/
+		BufferBuilder bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 		{
-			GL11.glTexCoord2f(0, 0);
-			GL11.glVertex2f(-1, -1);
-			GL11.glTexCoord2f(1, 0);
-			GL11.glVertex2f(1, -1);
-			GL11.glTexCoord2f(1, 1);
-			GL11.glVertex2f(1, 1);
-			GL11.glTexCoord2f(0, 1);
-			GL11.glVertex2f(-1, 1);
+			/*GL11.glTexCoord2f(0, 0);
+			GL11.glVertex2f(-1, -1);*/
+			bufferBuilder.vertex(-1, -1, 0).texture(0, 0);
+			/*GL11.glTexCoord2f(1, 0);
+			GL11.glVertex2f(1, -1);*/
+			bufferBuilder.vertex(1, -1, 0).texture(1, 0);
+			/*GL11.glTexCoord2f(1, 1);
+			GL11.glVertex2f(1, 1);*/
+			bufferBuilder.vertex(1, 1, 0).texture(1, 1);
+			/*GL11.glTexCoord2f(0, 1);
+			GL11.glVertex2f(-1, 1);*/
+			bufferBuilder.vertex(-1, 1, 0).texture(0, 1);
 		}
-		GL11.glEnd();
+		/*GL11.glEnd();*/
+		bufferBuilder.end();
 		for (int i = BufferManager.framebufferTextures.length-1; i >= 0; i--) {
-			GL13.glActiveTexture(GL13.GL_TEXTURE0+i);
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+			/*GL13.glActiveTexture(GL13.GL_TEXTURE0+i);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);*/
+			GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);
+			GlStateManager._bindTexture(0);
 		}
 
-		GL11.glMatrixMode(GL11.GL_PROJECTION);
+		/*GL11.glMatrixMode(GL11.GL_PROJECTION);
 		GL11.glPopMatrix();
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
-		GL11.glPopMatrix();
+		GL11.glPopMatrix();*/
+		Matrix4f textureMatrix = RenderSystem.getTextureMatrix();
+		RenderSystem.setupDefaultState();
+		RenderSystem.setTextureMatrix(textureMatrix);
 
-		GL13.glActiveTexture(GL13.GL_TEXTURE2);
+		/*GL13.glActiveTexture(GL13.GL_TEXTURE2);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, lightmap);
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-
-		GL20.glUseProgram(0);
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);*/
+		GlStateManager._activeTexture(GL13.GL_TEXTURE2);
+		GlStateManager._bindTexture(lightmap);
+		GlStateManager._activeTexture(GL13.GL_TEXTURE0);
+		/*GL20.glUseProgram(0);*/
+		GlStateManager._glUseProgram(0);
 	}
 	
 	protected int getShaderProgram() {
